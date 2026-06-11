@@ -84,7 +84,7 @@ header {
   box-shadow:var(--shadow); display:flex; align-items:center;
   padding:0 16px; gap:10px;
 }
-header h1 { flex:1; }
+header h1 { flex:1; font-size:1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
 .sync-dot { width:8px; height:8px; border-radius:50%; background:var(--text2); transition:background .3s; flex-shrink:0; }
 .sync-dot.syncing { background:var(--warn); animation:pulse 1s infinite; }
 .sync-dot.synced  { background:var(--success); }
@@ -202,6 +202,10 @@ textarea { min-height:72px; resize:vertical; line-height:1.5; }
   .io-grid { grid-template-columns:1fr 1fr; }
   .trip-purpose { max-width:130px; }
   .user-email { display:none; }
+  header h1 { font-size:.9rem; }
+  header img { height:28px !important; }
+  .badge { font-size:.65rem; padding:2px 6px; }
+  .btn-logout { font-size:.72rem; padding:5px 8px; min-height:32px; }
 }
 ::-webkit-scrollbar { width:6px; }
 ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
