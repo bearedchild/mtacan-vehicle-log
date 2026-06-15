@@ -313,7 +313,7 @@ textarea { min-height:72px; resize:vertical; line-height:1.5; }
     <div class="stats-strip no-print">
       <div class="stat"><span class="stat-value" id="stat-trips">0</span><span class="stat-label">Total Trips</span></div>
       <div class="stat"><span class="stat-value" id="stat-distance">0 km</span><span class="stat-label">Total Distance</span></div>
-      <div class="stat"><span class="stat-value" id="stat-date-range">—</span><span class="stat-label">Date Range</span></div>
+      <div class="stat"><span class="stat-value" id="stat-date-range">—</span><span class="stat-label">Month</span></div>
     </div>
 
     <!-- FORM -->
@@ -859,16 +859,19 @@ function renderList() {
   updateStats(filtered); updateBadge();
 }
 
-function updateStats(filtered) {
-  const arr=filtered!==undefined?filtered:entries;
-  const total=arr.reduce((s,e)=>s+(e.distance||0),0);
-  document.getElementById('stat-trips').textContent=arr.length;
-  document.getElementById('stat-distance').textContent=total.toFixed(1)+' km';
-  if(arr.length) {
-    const dates=arr.map(e=>e.date).sort();
-    document.getElementById('stat-date-range').textContent=
-      dates[0]===dates[dates.length-1]?formatDate(dates[0]):formatDate(dates[0])+' – '+formatDate(dates[dates.length-1]);
-  } else { document.getElementById('stat-date-range').textContent='—'; }
+function updateStats() {
+  // Always filter to current month only
+  const now = new Date();
+  const curY = now.getFullYear();
+  const curM = String(now.getMonth()+1).padStart(2,'0');
+  const monthEntries = entries.filter(e => e.date && e.date.startsWith(curY+'-'+curM));
+
+  const total = monthEntries.reduce((s,e)=>s+(e.distance||0),0);
+  document.getElementById('stat-trips').textContent = monthEntries.length;
+  document.getElementById('stat-distance').textContent = total.toFixed(1)+' km';
+
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('stat-date-range').textContent = months[now.getMonth()]+' '+curY;
 }
 
 function updateBadge() {
