@@ -103,9 +103,38 @@ section.card { background:var(--surface); border:1px solid var(--border); border
 .card-header h2 { margin:0; }
 .card-body { padding:16px; }
 
-.form-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(155px,1fr)); gap:12px; }
+.form-grid {
+  display:grid;
+  gap:12px;
+  /* Desktop: 4 equal columns */
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-areas:
+    "fg-date    fg-start   fg-end     fg-ttime"
+    "fg-purpose fg-odo-start fg-km   fg-endodo"
+    "fg-notes   fg-notes   fg-notes   fg-notes";
+}
+.fg-date     { grid-area: fg-date; }
+.fg-start    { grid-area: fg-start; }
+.fg-end      { grid-area: fg-end; }
+.fg-ttime    { grid-area: fg-ttime; }
+.fg-purpose  { grid-area: fg-purpose; }
+.fg-odo-start{ grid-area: fg-odo-start; }
+.fg-km       { grid-area: fg-km; }
+.fg-endodo   { grid-area: fg-endodo; }
+.fg-notes    { grid-area: fg-notes; }
+@media (max-width: 600px) {
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-areas:
+      "fg-date      fg-start"
+      "fg-end       fg-ttime"
+      "fg-purpose   fg-odo-start"
+      "fg-km        fg-endodo"
+      "fg-notes     fg-notes";
+  }
+}
 .form-group { display:flex; flex-direction:column; }
-.form-group.wide { grid-column:1/-1; }
+
 
 input[type=text],input[type=number],input[type=date],input[type=time],input[type=search],select,textarea {
   width:100%; padding:10px 12px; font-family:var(--font); font-size:.9375rem;
@@ -282,60 +311,62 @@ textarea { min-height:72px; resize:vertical; line-height:1.5; }
         <div class="quick-banner" id="quick-banner">⚡ Quick Add Mode — large fields for phone use</div>
         <div id="form-alert" class="alert alert-danger"></div>
         <div class="form-grid">
-          <!-- Row 1: Purpose · Route · Travelers -->
-          <div class="form-group">
-            <label for="f-purpose">Purpose *</label>
-            <input type="text" id="f-purpose" placeholder="e.g. Jamā'at visit" required>
-            <span class="field-error" id="err-purpose">Required.</span>
-          </div>
-          <div class="form-group">
-            <label for="f-route">Route *</label>
-            <input type="text" id="f-route" placeholder="e.g. Home → Mosque" required>
-            <span class="field-error" id="err-route">Required.</span>
-          </div>
-          <div class="form-group">
-            <label for="f-travelers">Travelers</label>
-            <input type="text" id="f-travelers" placeholder="e.g. Ahmed, Sara">
-          </div>
-          <!-- Row 2: Date · Start · End · Total Time -->
-          <div class="form-group">
+          <!-- Row 1 desktop: Date / Start Time / End Time / Total Time -->
+          <!-- Row 1 phone: Date / Start Time -->
+          <div class="form-group fg-date">
             <label for="f-date">Date *</label>
             <input type="date" id="f-date" required>
             <span class="field-error" id="err-date">Required.</span>
           </div>
-          <div class="form-group">
+          <div class="form-group fg-start">
             <label for="f-start">Start Time *</label>
             <input type="time" id="f-start" required oninput="calcTimeTravelled()">
             <span class="field-error" id="err-start">Required.</span>
           </div>
-          <div class="form-group">
+          <!-- Row 2 phone: End Time / Total Time -->
+          <div class="form-group fg-end">
             <label for="f-end">End Time *</label>
             <input type="time" id="f-end" required oninput="calcTimeTravelled()">
             <span class="field-error" id="err-end">Required.</span>
           </div>
-          <div class="form-group">
+          <div class="form-group fg-ttime">
             <label>Total Time</label>
             <div class="display-box" id="ttime-display">—</div>
           </div>
-          <!-- Row 3: Start Odo · End Odo · Distance -->
-          <div class="form-group">
+          <!-- Row 2 desktop / Row 3 phone: Purpose / Start Odo -->
+          <div class="form-group fg-purpose">
+            <label for="f-purpose">Purpose *</label>
+            <input type="text" id="f-purpose" list="purpose-options" placeholder="Select or type…" required autocomplete="off">
+            <datalist id="purpose-options">
+              <option value="Daily Commute">
+              <option value="Work Out of Office">
+              <option value="Grocery / Errands">
+              <option value="School Drop-off / Pick-up">
+              <option value="Airport Drop-off / Pick-up">
+              <option value="Hospital Visit">
+              <option value="Meeting">
+            </datalist>
+            <span class="field-error" id="err-purpose">Required.</span>
+          </div>
+          <div class="form-group fg-odo-start">
             <label for="f-odo-start">Start Odo (km) *</label>
             <input type="number" id="f-odo-start" min="0" step="0.1" placeholder="12345" required oninput="calcEndOdo()">
             <span class="field-error" id="err-odo-start">Required.</span>
           </div>
-          <div class="form-group">
+          <!-- Row 3 desktop / Row 4 phone: KM Travelled / End Odo -->
+          <div class="form-group fg-km">
             <label for="f-km-travelled">KM Travelled *</label>
             <input type="number" id="f-km-travelled" min="0" step="0.1" placeholder="e.g. 33" required oninput="calcEndOdo()">
             <span class="field-error" id="err-odo-end">Required.</span>
           </div>
-          <div class="form-group">
+          <div class="form-group fg-endodo">
             <label>End Odo (km)</label>
             <div class="display-box" id="distance-display">—</div>
           </div>
-          <!-- Row 4: Notes -->
-          <div class="form-group wide">
+          <!-- Notes -->
+          <div class="form-group fg-notes">
             <label for="f-notes">Notes</label>
-            <textarea id="f-notes" placeholder="Any additional notes…"></textarea>
+            <textarea id="f-notes" placeholder="Travelers, notes…"></textarea>
           </div>
         </div>
         <div class="btn-row">
@@ -560,10 +591,8 @@ function calcTimeTravelled() {
 function copyPrevious() {
   if (!entries.length) { toast('No previous entries to copy.'); return; }
   const last = entries[0];
-  document.getElementById('f-purpose').value   = last.purpose   || '';
-  document.getElementById('f-route').value     = last.route     || '';
-  document.getElementById('f-travelers').value = last.travelers || '';
-  toast('Copied purpose, route & travelers from last entry.');
+  document.getElementById('f-purpose').value = last.purpose || '';
+  toast('Copied purpose from last entry.');
 }
 
 /* ── VALIDATION ── */
@@ -593,8 +622,6 @@ async function submitForm() {
   const endT      = document.getElementById('f-end').value.trim();
   const ttime     = document.getElementById('ttime-display').textContent;
   const purpose   = document.getElementById('f-purpose').value.trim();
-  const route     = document.getElementById('f-route').value.trim();
-  const travelers = document.getElementById('f-travelers').value.trim();
   const odoStartV = document.getElementById('f-odo-start').value.trim();
   const kmTravV   = document.getElementById('f-km-travelled').value.trim();
   const notes     = document.getElementById('f-notes').value.trim();
@@ -603,7 +630,6 @@ async function submitForm() {
   if(!startT)    { showFieldError('f-start','err-start');         valid=false; }
   if(!endT)      { showFieldError('f-end','err-end');             valid=false; }
   if(!purpose)   { showFieldError('f-purpose','err-purpose');     valid=false; }
-  if(!route)     { showFieldError('f-route','err-route');         valid=false; }
   if(!odoStartV) { showFieldError('f-odo-start','err-odo-start'); valid=false; }
   if(!kmTravV)   { showFieldError('f-km-travelled','err-odo-end'); valid=false; }
   if(!valid) { showFormAlert('Please fill in all required fields.'); return; }
@@ -618,7 +644,7 @@ async function submitForm() {
     user_id: currentUser.id,
     date, start_time:startT, end_time:endT,
     time_travelled: (ttime==='—'||ttime==='') ? '' : ttime,
-    purpose, route, travelers, odo_start:odoStart, odo_end:odoEnd, distance, notes
+    purpose, route:'', travelers:'', odo_start:odoStart, odo_end:odoEnd, distance, notes
   };
 
   const btn=document.getElementById('submit-btn');
@@ -725,7 +751,7 @@ function prefillStartOdo() {
 
 function resetForm() {
   editId=null; clearErrors();
-  ['f-purpose','f-route','f-travelers','f-date','f-start','f-end','f-km-travelled','f-odo-start','f-notes']
+  ['f-purpose','f-date','f-start','f-end','f-km-travelled','f-odo-start','f-notes']
     .forEach(id=>{document.getElementById(id).value='';});
   prefillStartOdo();
   ['distance-display','ttime-display'].forEach(id=>{
@@ -776,8 +802,7 @@ function renderList() {
       </div>
       <div class="trip-card-meta">
         <span>🕐 ${e.startTime||'—'} – ${e.endTime||'—'}${e.timeTravelled?' ('+esc(e.timeTravelled)+')':''}</span>
-        <span>🛣 ${esc(e.route)}</span>
-        ${e.travelers?`<span>👥 ${esc(e.travelers)}</span>`:''}
+
         <span>📍 ${e.odoStart} → ${e.odoEnd} km</span>
         ${e.notes?`<span>📝 ${esc(e.notes)}</span>`:''}
       </div>
@@ -813,8 +838,8 @@ function exportJSON() {
 }
 function exportCSV() {
   if(!entries.length){toast('No entries to export.');return;}
-  const headers=['Date','Start','End','Time Travelled','Purpose','Route','Travelers','Start Odo','End Odo','Distance (km)','Notes'];
-  const rows=entries.map(e=>[e.date,e.startTime,e.endTime,e.timeTravelled,e.purpose,e.route,e.travelers,e.odoStart,e.odoEnd,e.distance,e.notes].map(csvEsc));
+  const headers=['Date','Start','End','Time Travelled','Purpose','Start Odo','End Odo','Distance (km)','Notes'];
+  const rows=entries.map(e=>[e.date,e.startTime,e.endTime,e.timeTravelled,e.purpose,e.odoStart,e.odoEnd,e.distance,e.notes].map(csvEsc));
   downloadFile('vehicle-logbook.csv','text/csv',[headers.map(csvEsc).join(','),...rows.map(r=>r.join(','))].join('\r\n'));
   toast('CSV exported.');
 }
@@ -836,7 +861,7 @@ function importJSON(event) {
         user_id:currentUser.id,
         date:e.date, start_time:e.startTime||e.start_time||'',
         end_time:e.endTime||e.end_time||'', time_travelled:e.timeTravelled||e.time_travelled||'',
-        purpose:e.purpose||'', route:e.route||'', travelers:e.travelers||'',
+        purpose:e.purpose||'', route:'', travelers:'',
         odo_start:e.odoStart||e.odo_start||0, odo_end:e.odoEnd||e.odo_end||0,
         distance:e.distance!=null?e.distance:parseFloat(((e.odoEnd||0)-(e.odoStart||0)).toFixed(1)),
         notes:e.notes||''
