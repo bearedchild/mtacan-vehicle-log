@@ -704,8 +704,12 @@ function cancelEdit() { editId=null; resetForm(); }
 
 function resetForm() {
   editId=null; clearErrors();
-  ['f-purpose','f-route','f-travelers','f-date','f-start','f-end','f-odo-start','f-odo-end','f-notes']
+  ['f-purpose','f-route','f-travelers','f-date','f-start','f-end','f-odo-end','f-notes']
     .forEach(id=>{document.getElementById(id).value='';});
+  // Pre-fill Start Odo with the last entry's End Odo
+  const lastOdo = entries.length > 0 && entries[0].odoEnd != null ? entries[0].odoEnd : '';
+  document.getElementById('f-odo-start').value = lastOdo;
+  calcDistance();
   ['distance-display','ttime-display'].forEach(id=>{
     const el=document.getElementById(id);
     el.textContent='—'; el.style.color=''; el.style.background='';
