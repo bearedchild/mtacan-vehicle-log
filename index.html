@@ -14,8 +14,8 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
   --bg:#0F1117; --surface:#1C1F2B; --surface2:#252836; --border:#333747;
-  --text:#E8EAF0; --text2:#8B90A4; --accent:#4B8BF5; --accent-dk:#3B7AF0;
-  --accent-bg:#1A2845; --danger:#F87171; --danger-bg:#2D1515;
+  --text:#E8EAF0; --text2:#8B90A4; --accent:#e3256b; --accent-dk:#c01e5a;
+  --accent-bg:#2d0c19; --danger:#F87171; --danger-bg:#2D1515;
   --success:#4ADE80; --success-bg:#132A1B; --warn:#FBBF24; --warn-bg:#2A1F08;
   --shadow:0 1px 3px rgba(0,0,0,.3); --shadow-md:0 4px 12px rgba(0,0,0,.4);
   --radius:10px; --radius-sm:6px; --font:system-ui,-apple-system,'Segoe UI',sans-serif;
@@ -505,6 +505,7 @@ function showApp() {
   document.getElementById('main-app').classList.add('visible');
   document.getElementById('user-email').textContent = currentUser?.email || '';
   document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+  // loadTrips will call prefillStartOdo after entries are fetched
   loadTrips();
 }
 
@@ -634,8 +635,8 @@ async function submitForm() {
       toast('Entry saved.');
     }
     setSyncStatus('synced','Saved');
-    resetForm();
     await loadTrips();
+    resetForm();
   } catch(err) {
     setSyncStatus('error','Error');
     showFormAlert('Save failed: '+err.message);
@@ -713,14 +714,18 @@ function cancelEdit() { editId=null; resetForm(); }
 function prefillStartOdo() {
   // Only pre-fill if not currently editing
   if (editId !== null) return;
-  const lastOdo = entries.length > 0 && entries[0].odoEnd != null ? entries[0].odoEnd : '';
-  document.getElementById('f-odo-start').value = lastOdo;
-  calcEndOdo();
+  if (entries.length > 0 && entries[0].odoEnd != null) {
+    document.getElementById('f-odo-start').value = entries[0].odoEnd;
+  }
+  // clear km travelled and end odo display
+  document.getElementById('f-km-travelled').value = '';
+  const dd = document.getElementById('distance-display');
+  dd.textContent = '—'; dd.style.color=''; dd.style.background='';
 }
 
 function resetForm() {
   editId=null; clearErrors();
-  ['f-purpose','f-route','f-travelers','f-date','f-start','f-end','f-km-travelled','f-notes']
+  ['f-purpose','f-route','f-travelers','f-date','f-start','f-end','f-km-travelled','f-odo-start','f-notes']
     .forEach(id=>{document.getElementById(id).value='';});
   prefillStartOdo();
   ['distance-display','ttime-display'].forEach(id=>{
