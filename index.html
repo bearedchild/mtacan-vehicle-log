@@ -320,16 +320,16 @@ textarea { min-height:72px; resize:vertical; line-height:1.5; }
           <!-- Row 3: Start Odo · End Odo · Distance -->
           <div class="form-group">
             <label for="f-odo-start">Start Odo (km) *</label>
-            <input type="number" id="f-odo-start" min="0" step="0.1" placeholder="12345" required oninput="calcDistance()">
+            <input type="number" id="f-odo-start" min="0" step="0.1" placeholder="12345" required oninput="calcEndOdo()">
             <span class="field-error" id="err-odo-start">Required.</span>
           </div>
           <div class="form-group">
-            <label for="f-odo-end">End Odo (km) *</label>
-            <input type="number" id="f-odo-end" min="0" step="0.1" placeholder="12400" required oninput="calcDistance()">
+            <label for="f-km-travelled">KM Travelled *</label>
+            <input type="number" id="f-km-travelled" min="0" step="0.1" placeholder="e.g. 33" required oninput="calcEndOdo()">
             <span class="field-error" id="err-odo-end">Required.</span>
           </div>
           <div class="form-group">
-            <label>Distance (km)</label>
+            <label>End Odo (km)</label>
             <div class="display-box" id="distance-display">—</div>
           </div>
           <!-- Row 4: Notes -->
@@ -522,17 +522,23 @@ function toggleQuickAdd() {
 }
 
 /* ── CALCULATIONS ── */
-function calcDistance() {
-  const s  = parseFloat(document.getElementById('f-odo-start').value);
-  const e  = parseFloat(document.getElementById('f-odo-end').value);
-  const el = document.getElementById('distance-display');
-  if (!isNaN(s) && !isNaN(e)) {
-    const d = e - s;
-    el.textContent = d >= 0 ? d.toFixed(1)+' km' : '⚠ Invalid';
-    el.style.color      = d < 0 ? 'var(--danger)' : '';
-    el.style.background = d < 0 ? 'var(--danger-bg)' : '';
-  } else { el.textContent='—'; el.style.color=''; el.style.background=''; }
+function calcEndOdo() {
+  const s   = parseFloat(document.getElementById('f-odo-start').value);
+  const km  = parseFloat(document.getElementById('f-km-travelled').value);
+  const el  = document.getElementById('distance-display');
+  if (!isNaN(s) && !isNaN(km) && km >= 0) {
+    const endOdo = parseFloat((s + km).toFixed(1));
+    el.textContent = endOdo + ' km';
+    el.style.color = '';
+    el.style.background = '';
+    el.dataset.endOdo = endOdo;
+  } else {
+    el.textContent='—'; el.style.color=''; el.style.background='';
+    el.dataset.endOdo = '';
+  }
 }
+// Keep backward compat alias
+function calcDistance() { calcEndOdo(); }
 
 function calcTimeTravelled() {
   const sv = document.getElementById('f-start').value;
@@ -589,7 +595,7 @@ async function submitForm() {
   const route     = document.getElementById('f-route').value.trim();
   const travelers = document.getElementById('f-travelers').value.trim();
   const odoStartV = document.getElementById('f-odo-start').value.trim();
-  const odoEndV   = document.getElementById('f-odo-end').value.trim();
+  const kmTravV   = document.getElementById('f-km-travelled').value.trim();
   const notes     = document.getElementById('f-notes').value.trim();
 
   if(!date)      { showFieldError('f-date','err-date');           valid=false; }
@@ -598,14 +604,15 @@ async function submitForm() {
   if(!purpose)   { showFieldError('f-purpose','err-purpose');     valid=false; }
   if(!route)     { showFieldError('f-route','err-route');         valid=false; }
   if(!odoStartV) { showFieldError('f-odo-start','err-odo-start'); valid=false; }
-  if(!odoEndV)   { showFieldError('f-odo-end','err-odo-end');     valid=false; }
+  if(!kmTravV)   { showFieldError('f-km-travelled','err-odo-end'); valid=false; }
   if(!valid) { showFormAlert('Please fill in all required fields.'); return; }
 
-  const odoStart=parseFloat(odoStartV), odoEnd=parseFloat(odoEndV);
-  if(isNaN(odoStart)||isNaN(odoEnd)) { showFormAlert('Odometer values must be numbers.'); return; }
-  if(odoEnd<odoStart) { showFieldError('f-odo-end','err-odo-end','End odometer must be ≥ start.'); showFormAlert('Ending odometer cannot be less than starting odometer.'); return; }
+  const odoStart=parseFloat(odoStartV), kmTrav=parseFloat(kmTravV);
+  if(isNaN(odoStart)||isNaN(kmTrav)) { showFormAlert('Odometer values must be numbers.'); return; }
+  if(kmTrav < 0) { showFieldError('f-km-travelled','err-odo-end','KM travelled cannot be negative.'); showFormAlert('KM travelled cannot be negative.'); return; }
 
-  const distance = parseFloat((odoEnd-odoStart).toFixed(1));
+  const distance = parseFloat(kmTrav.toFixed(1));
+  const odoEnd   = parseFloat((odoStart + distance).toFixed(1));
   const payload  = {
     user_id: currentUser.id,
     date, start_time:startT, end_time:endT,
@@ -674,9 +681,9 @@ function editEntry(id) {
   document.getElementById('f-start').value     = e.startTime     || '';
   document.getElementById('f-end').value       = e.endTime       || '';
   document.getElementById('f-odo-start').value = e.odoStart!=null?e.odoStart:'';
-  document.getElementById('f-odo-end').value   = e.odoEnd!=null?e.odoEnd:'';
+  document.getElementById('f-km-travelled').value = e.distance!=null?e.distance:'';
   document.getElementById('f-notes').value     = e.notes || '';
-  calcDistance(); calcTimeTravelled();
+  calcEndOdo(); calcTimeTravelled();
   if(e.timeTravelled) document.getElementById('ttime-display').textContent=e.timeTravelled;
   document.getElementById('form-title').textContent='Edit Entry';
   document.getElementById('submit-btn').textContent='✏️ Update Entry';
@@ -704,7 +711,7 @@ function cancelEdit() { editId=null; resetForm(); }
 
 function resetForm() {
   editId=null; clearErrors();
-  ['f-purpose','f-route','f-travelers','f-date','f-start','f-end','f-odo-end','f-notes']
+  ['f-purpose','f-route','f-travelers','f-date','f-start','f-end','f-km-travelled','f-notes']
     .forEach(id=>{document.getElementById(id).value='';});
   // Pre-fill Start Odo with the last entry's End Odo
   const lastOdo = entries.length > 0 && entries[0].odoEnd != null ? entries[0].odoEnd : '';
