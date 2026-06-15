@@ -662,6 +662,7 @@ async function loadTrips() {
     }));
     setSyncStatus('synced','Live');
     renderList(); updateStats(); updateBadge();
+    prefillStartOdo();
   } catch(err) {
     setSyncStatus('error','Offline');
     toast('⚠ Could not load trips.');
@@ -709,14 +710,19 @@ async function deleteEntry(id) {
 
 function cancelEdit() { editId=null; resetForm(); }
 
+function prefillStartOdo() {
+  // Only pre-fill if not currently editing
+  if (editId !== null) return;
+  const lastOdo = entries.length > 0 && entries[0].odoEnd != null ? entries[0].odoEnd : '';
+  document.getElementById('f-odo-start').value = lastOdo;
+  calcEndOdo();
+}
+
 function resetForm() {
   editId=null; clearErrors();
   ['f-purpose','f-route','f-travelers','f-date','f-start','f-end','f-km-travelled','f-notes']
     .forEach(id=>{document.getElementById(id).value='';});
-  // Pre-fill Start Odo with the last entry's End Odo
-  const lastOdo = entries.length > 0 && entries[0].odoEnd != null ? entries[0].odoEnd : '';
-  document.getElementById('f-odo-start').value = lastOdo;
-  calcDistance();
+  prefillStartOdo();
   ['distance-display','ttime-display'].forEach(id=>{
     const el=document.getElementById(id);
     el.textContent='—'; el.style.color=''; el.style.background='';
