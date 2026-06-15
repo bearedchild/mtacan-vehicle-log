@@ -261,6 +261,23 @@ textarea { min-height:72px; resize:vertical; line-height:1.5; }
         <input type="email" id="signin-email" placeholder="Email address" autocomplete="email">
         <input type="password" id="signin-password" placeholder="Password" autocomplete="current-password">
         <button class="auth-btn" id="signin-btn" onclick="signIn()">Sign In</button>
+        <p style="text-align:center;margin-top:12px;font-size:.85rem;">
+          <a href="#" onclick="switchTab('forgot')" style="color:var(--accent);text-decoration:none;">Forgot Password?</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- Forgot Password -->
+    <div id="panel-forgot" style="display:none">
+      <div class="auth-form">
+        <div id="forgot-error" class="auth-error"></div>
+        <div id="forgot-success" class="auth-success"></div>
+        <p style="font-size:.875rem;color:var(--text2);margin-bottom:12px;">Enter your email and we'll send you a password reset link.</p>
+        <input type="email" id="forgot-email" placeholder="Email address" autocomplete="email">
+        <button class="auth-btn" id="forgot-btn" onclick="forgotPassword()">Send Reset Link</button>
+        <p style="text-align:center;margin-top:12px;font-size:.85rem;">
+          <a href="#" onclick="switchTab('signin')" style="color:var(--accent);text-decoration:none;">← Back to Sign In</a>
+        </p>
       </div>
     </div>
 
@@ -446,6 +463,7 @@ function authHeaders(extra) {
 function switchTab(tab) {
   document.getElementById('panel-signin').style.display   = tab==='signin'   ? '' : 'none';
   document.getElementById('panel-register').style.display = tab==='register' ? '' : 'none';
+  document.getElementById('panel-forgot').style.display   = tab==='forgot'   ? '' : 'none';
   document.getElementById('tab-signin').classList.toggle('active',   tab==='signin');
   document.getElementById('tab-register').classList.toggle('active', tab==='register');
 }
@@ -528,6 +546,33 @@ function signOut() {
   document.getElementById('signin-email').value    = '';
   document.getElementById('signin-password').value = '';
   switchTab('signin');
+}
+
+/* ── FORGOT PASSWORD ── */
+async function forgotPassword() {
+  const email  = document.getElementById('forgot-email').value.trim();
+  const errEl  = document.getElementById('forgot-error');
+  const sucEl  = document.getElementById('forgot-success');
+  const btn    = document.getElementById('forgot-btn');
+  errEl.classList.remove('show'); sucEl.classList.remove('show');
+  if (!email) { errEl.textContent='Please enter your email address.'; errEl.classList.add('show'); return; }
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Sending…';
+  try {
+    const res = await fetch(`${AUTH_URL}/recover`, {
+      method:'POST',
+      headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({email})
+    });
+    if (!res.ok) throw new Error('Could not send reset email.');
+    sucEl.textContent='✅ Reset link sent! Check your email inbox.';
+    sucEl.classList.add('show');
+    document.getElementById('forgot-email').value='';
+  } catch(err) {
+    errEl.textContent = err.message;
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled=false; btn.textContent='Send Reset Link';
+  }
 }
 
 /* ── SHOW APP ── */
